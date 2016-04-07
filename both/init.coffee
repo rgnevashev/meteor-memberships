@@ -17,20 +17,20 @@
 ###
 
 schema =
-  memberships:
+  subscriptions:
+    type: [Object]
+    optional: true
+    blackbox: true
+  paymentGateways:
     type: new SimpleSchema
-      subscriptions:
+      stripe:
         type: [Object]
         optional: true
         blackbox: true
-      services:
-        type: new SimpleSchema
-          stripe:
-            type: new SimpleSchema
-              customerId:
-                type: String
-            optional: true
+      paypal:
+        type: [Object]
         optional: true
+        blackbox: true
     optional: true
 
 @MembershipsSchema = new SimpleSchema schema
