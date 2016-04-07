@@ -1,5 +1,5 @@
 ###
-# Role -> Plans -> Services
+# Group -> Role -> Plans -> Services
 ###
 
 class share.MembershipsCommon extends EventEmitter
