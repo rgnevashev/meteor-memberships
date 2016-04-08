@@ -4,19 +4,20 @@ class MembershipsClient extends share.MembershipsCommon
   constructor: ->
     super()
 
-  subscribe: (options = {}, done) ->
-    Meteor.call 'Memberships/subscribe', options, done
+  subscribe: (subscription = {}, options = {}, done) ->
+    Meteor.call 'Memberships/subscribe', subscription, options, done
 
-  update: (subscriptionId, options = {}, done) ->
-    Meteor.call 'Memberships/update', subscriptionId, options, done
+  update: (subscriptionId, subscription = {}, options = {}, done) ->
+    Meteor.call 'Memberships/update', subscriptionId, subscription, options, done
 
   cancel: (subscriptionId, options = {}, done) ->
     Meteor.call 'Memberships/cancel', subscriptionId, options, done
 
+
   get: (group = 'default') ->
     check group, String
     subscription = @subscription group: group
-    unless subscription then @defaultRole() else @roleByPlan(subscription.plan)
+    unless subscription then @defaultRole(group) else @roleByPlan(subscription.plan)
 
   has: (role, options = {}) ->
     check role, String
@@ -24,19 +25,9 @@ class MembershipsClient extends share.MembershipsCommon
     throw new Meteor.Error 'Role not found' unless group
     subscription = @subscription group: group
     unless subscription
-      if role == @defaultRole() then true else false
+      if role == @defaultRole(group) then true else false
     else
       if role == @roleByPlan(subscription.plan) then true else false
-
-  hasAny: (roles, options = {}) ->
-    check roles, Match.OneOf(Array, String)
-    unless _.isArray(roles)
-      roles = roles.split(',')
-    pass = false
-    _.each roles or [], (role) =>
-      if @has(role)
-        pass = true
-    pass
 
   hasAccess: (role, options = {}) ->
     check role, String
@@ -44,17 +35,18 @@ class MembershipsClient extends share.MembershipsCommon
     throw new Meteor.Error 'Role not found' unless group
     subscription = @subscription group: group
     unless subscription
-      if role == @defaultRole() then true else false
+      if role == @defaultRole(group) then true else false
     else
       userRole = @roleByPlan(subscription.plan)
-      if _.contains(_.union([userRole], @_plans[userRole].includedRoles), role) then true else false
+      if _.contains(_.union([userRole], @role(userRole, group).inherit), role) then true else false
 
-  subscription: (options = {}) ->
+  subscription: (userId, options = {}) ->
     _.defaults options,
-      service: 'stripe'
+      paymentGateway: 'stripe'
+    check userId, String
     check options,
       Match.ObjectIncluding
-        service: String
-    user = Meteor.users.findOne Meteor.userId()
+        paymentGateway: String
+    user = Meteor.users.findOne userId
     throw new Meteor.Error 'User not found' unless user
-    _.findWhere user.memberships?.subscriptions or [], _.pick(options, 'service', 'group', 'id', 'plan')
+    _.findWhere user.subscriptions or [], _.pick(options, 'paymentGateway', 'group', 'id', 'plan')

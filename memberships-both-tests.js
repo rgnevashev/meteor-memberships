@@ -1,36 +1,4 @@
-
 /*
-Meteor.users.attachSchema(
-  new SimpleSchema({
-    username: {
-      type: String,
-      optional: true
-    },
-    emails:{
-      type: [Object],
-      optional: true
-    },
-    "emails.$.address": {
-      type: String,
-      regEx: SimpleSchema.RegEx.Email
-    },
-    "emails.$.verified": {
-      type: Boolean,
-      optional: true,
-      defaultValue: false
-    },
-    services:{
-      type: Object,
-      optional: true,
-      blackbox: true
-    },
-    roles:{
-      type: [String],
-      optional: true
-    }
-  })
-)*/
-
 Tinytest.add('memberships - MembershipsCommon', function (test) {
 
   test.isTrue(Memberships.plansByRoles('pro').length === 5);
@@ -59,4 +27,6 @@ Tinytest.add('memberships - MembershipsCommon', function (test) {
   test.isTrue(_.difference(Memberships.rolesByGroup('default'),["free", "pro", "basic"]).length === 0);
 
   test.isTrue(_.difference(Memberships.groups(),["default"]).length === 0)
+
 });
+*/

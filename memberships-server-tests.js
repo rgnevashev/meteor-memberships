@@ -1,5 +1,5 @@
 
-
+/*
 Tinytest.add('memberships - services - StripeService', function (test) {
 
   test.include(Meteor.settings.Stripe, 'secretKey');
@@ -42,8 +42,8 @@ Tinytest.add('memberships - services - StripeService', function (test) {
 
   Meteor.call('test.after');
 });
-
-
+*/
+/*
 Tinytest.add('memberships - MembershipsServer', function (test) {
 
   test.include(Meteor.settings.Stripe, 'secretKey');
@@ -170,3 +170,4 @@ Tinytest.add('memberships - MembershipsServer', function (test) {
   Meteor.call('test.after');
 
 });
+*/

@@ -1,4 +1,4 @@
-
+/*
 Tinytest.addAsync('memberships - MembershipsClient', (test, done) => {
 
   const email = 'rgnevashev+test@gmail.com';
@@ -114,17 +114,6 @@ Tinytest.addAsync('memberships - MembershipsClient', (test, done) => {
                   test.isTrue(Memberships.hasAccess('basic'));
 
                   Meteor.call('test.after', () => done());
-                  /*
-                  Memberships.cancel(subscriptionId, (err, subscriptionId) => {
-                    if (err) {
-                      test.exception(err)
-                    }
-                    test.isTrue(Match.test(subscriptionId, String));
-                    test.isTrue(!!subscriptionId);
-
-                    Meteor.call('test.after', () => done());
-
-                  })*/
                 })
             });
           } else {
@@ -138,3 +127,4 @@ Tinytest.addAsync('memberships - MembershipsClient', (test, done) => {
   })
 
 })
+*/

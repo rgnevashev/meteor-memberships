@@ -34,20 +34,36 @@ Package.onUse(function(api) {
   api.export('MembershipsServer', 'server');
   api.export('MembershipsSchema');
 
-  api.export('StripeService', {testOnly: true});
+  api.export([
+    'StripePaymentGateway',
+    'StripeService'
+  ], {testOnly: true});
   //api.export('MembershipsCommon', ['client', 'server']);
 
+  // payment gateways
+  api.addFiles([
+    'server/gateways/PaymentGateway.coffee',
+    'server/gateways/Stripe.coffee'
+  ], 'server');
+
   api.addFiles('server/services/StripeService.coffee', 'server');
-  api.addFiles('both/memberships.coffee', ['client', 'server']);
-  api.addFiles('server/memberships.coffee', 'server');
-  api.addFiles('client/memberships.coffee', 'client');
+
+  api.addFiles('both/MembershipsCommon.coffee', ['client', 'server']);
+  api.addFiles('server/MembershipsServer.coffee', 'server');
+  api.addFiles('client/MembershipsClient.coffee', 'client');
+
   api.addFiles('both/init.coffee', ['client', 'server']);
-  api.addFiles('server/init.coffee', 'server');
-  api.addFiles('client/init.coffee', 'client');
-  api.addFiles('server/methods.coffee', 'server');
-  api.addFiles('client/helpers.coffee', 'client');
-  api.addFiles('server/publications.coffee', 'server');
-  api.addFiles('client/subscruptions.coffee', 'client');
+  api.addFiles([
+    'server/init.coffee',
+    'server/methods.coffee',
+    'server/publications.coffee'
+  ], 'server');
+
+  api.addFiles([
+    'client/init.coffee',
+    'client/subscruptions.coffee',
+    'client/helpers.coffee'
+  ], 'client');
 
   api.addFiles('server/globals.js', 'server');
   api.addFiles('client/globals.js', 'client');
@@ -62,7 +78,13 @@ Package.onTest(function(api) {
   api.use('test-helpers');
   api.use('accounts-password');
   api.use('rgnevashev:memberships');
-  api.addFiles('memberships-fixtures.js');
+
+  api.addFiles('tests/define.js', 'server');
+  api.addFiles('tests/paymentGateways.js', 'server');
+  api.addFiles('tests/fixtures.js');
+  api.addFiles('tests/common.js');
+  api.addFiles('tests/subscribe.js', 'server');
+
   api.addFiles('memberships-both-tests.js');
   api.addFiles('memberships-server-tests.js', 'server');
   api.addFiles('memberships-client-tests.js', 'client');
