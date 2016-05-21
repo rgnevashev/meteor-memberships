@@ -38,13 +38,10 @@ Package.onUse(function(api) {
     'StripePaymentGateway',
   ], {testOnly: true});
 
-  // payment gateways
   api.addFiles([
     'server/gateways/PaymentGateway.coffee',
     'server/gateways/Stripe.coffee'
   ], 'server');
-
-  api.addFiles('server/services/StripeService.coffee', 'server');
 
   api.addFiles('both/MembershipsCommon.coffee', ['client', 'server']);
   api.addFiles('server/MembershipsServer.coffee', 'server');
@@ -83,7 +80,4 @@ Package.onTest(function(api) {
   api.addFiles('tests/common.js');
   api.addFiles('tests/subscribe.js', 'server');
 
-  api.addFiles('memberships-both-tests.js');
-  api.addFiles('memberships-server-tests.js', 'server');
-  api.addFiles('memberships-client-tests.js', 'client');
 });
