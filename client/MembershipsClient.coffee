@@ -40,13 +40,12 @@ class MembershipsClient extends share.MembershipsCommon
       userRole = @roleByPlan(subscription.plan)
       if _.contains(_.union([userRole], @role(userRole, group).inherit), role) then true else false
 
-  subscription: (userId, options = {}) ->
+  subscription: (options = {}) ->
     _.defaults options,
       paymentGateway: 'stripe'
-    check userId, String
     check options,
       Match.ObjectIncluding
         paymentGateway: String
-    user = Meteor.users.findOne userId
+    user = Meteor.users.findOne Meteor.userId()
     throw new Meteor.Error 'User not found' unless user
     _.findWhere user.subscriptions or [], _.pick(options, 'paymentGateway', 'group', 'id', 'plan')

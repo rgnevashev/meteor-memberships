@@ -15,12 +15,14 @@ class MembershipsServer extends share.MembershipsCommon
 
     @_payment_gateways = {}
 
-    # Events
     @on 'paymentGateway.established', (userId, name, config) ->
-      Meteor.users.update userId,
-        $set:
-          "paymentGateways.#{name}": config
-      , validate: false
+      switch name
+        when 'stripe'
+          console.log userId, name, config
+          Meteor.users.update userId,
+            $set:
+              "paymentGateways.#{name}": config
+          , validate: false
 
     @on 'system.subscription.create', (userId, subscription, options, done) ->
       self = @
@@ -237,7 +239,7 @@ class MembershipsServer extends share.MembershipsCommon
     user = Meteor.users.findOne userId
     throw new Meteor.Error 'User not found' unless user
     config = user.paymentGateways?[name]
-    unless config
+    if _.isEmpty(config)
       @emit 'paymentGateway.establish', userId, name,
         (err, options) ->
           unless err

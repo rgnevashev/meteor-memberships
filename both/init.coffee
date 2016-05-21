@@ -24,11 +24,11 @@ schema =
   paymentGateways:
     type: new SimpleSchema
       stripe:
-        type: [Object]
+        type: Object
         optional: true
         blackbox: true
       paypal:
-        type: [Object]
+        type: Object
         optional: true
         blackbox: true
     optional: true
