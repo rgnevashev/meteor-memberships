@@ -62,9 +62,3 @@ class share.StripePaymentGateway extends share.PaymentGateway
       'tax_percent',
       'trial_end'
     customerId: customer?.id
-
-  ###
-  config: (customerId) ->
-    check customerId, String
-    @client.customers.retrieve customerId
-  ###

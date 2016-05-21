@@ -36,9 +36,7 @@ Package.onUse(function(api) {
 
   api.export([
     'StripePaymentGateway',
-    'StripeService'
   ], {testOnly: true});
-  //api.export('MembershipsCommon', ['client', 'server']);
 
   // payment gateways
   api.addFiles([
