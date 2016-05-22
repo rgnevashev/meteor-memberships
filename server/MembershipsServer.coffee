@@ -18,7 +18,6 @@ class MembershipsServer extends share.MembershipsCommon
     @on 'paymentGateway.established', (userId, name, config) ->
       switch name
         when 'stripe'
-          console.log userId, name, config
           Meteor.users.update userId,
             $set:
               "paymentGateways.#{name}": config
