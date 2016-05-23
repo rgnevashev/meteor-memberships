@@ -5,4 +5,5 @@ Meteor.publish 'Memberships.roles', ->
 Meteor.publish 'Memberships.currentUser', ->
   Meteor.users.find @userId,
     fields:
-      memberships: 1
+      paymentGateways: 1
+      subscriptions: 1

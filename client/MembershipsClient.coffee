@@ -10,9 +10,12 @@ class MembershipsClient extends share.MembershipsCommon
   update: (subscriptionId, subscription = {}, options = {}, done) ->
     Meteor.call 'Memberships/update', subscriptionId, subscription, options, done
 
-  cancel: (subscriptionId, options = {}, done) ->
-    Meteor.call 'Memberships/cancel', subscriptionId, options, done
-
+  cancel: (group = 'default', options = {}, done) ->
+    subscription = @subscription {group}
+    if subscription
+      Meteor.call 'Memberships/cancel', subscription.id, _.extend(options, {group}), done
+    else
+      throw new Meteor.Error 'no-membership', 'No membership'
 
   get: (group = 'default') ->
     check group, String
