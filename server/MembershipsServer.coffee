@@ -167,7 +167,8 @@ class MembershipsServer extends share.MembershipsCommon
             subscription = self.update(userId, config.subscription.id, subscription, options)
         else
           throw new Meteor.Error 'memberships-error', err
-    subscription
+    _.extend config,
+      subscription: subscription
 
   ###
   # userId
@@ -188,7 +189,8 @@ class MembershipsServer extends share.MembershipsCommon
           self.emit 'subscription.updated', userId, config, subscription
         else
           throw new Meteor.Error 'memberships-error', err
-    subscription
+    _.extend config,
+      subscription: subscription
 
   ###
   # userId
@@ -207,7 +209,8 @@ class MembershipsServer extends share.MembershipsCommon
           self.emit 'subscription.canceled', userId, config, subscription
         else
           throw new Meteor.Error 'memberships-error', err
-    subscriptionId
+    _.extend config,
+      subscription: subscription
 
 
   subscription: (userId, options = {}) ->
