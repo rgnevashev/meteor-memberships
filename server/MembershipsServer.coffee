@@ -155,11 +155,12 @@ class MembershipsServer extends share.MembershipsCommon
   #   - paymentGateway String
   #   - selector Object
   ###
-  subscribe: (userId, subscription = {}, options = {}) ->
-    self = @
+  subscribe: (userId, subscription = {}, options = {}, self = @) ->
+    config = {}
     @emit 'system.subscription.create', userId, subscription, options,
-      (err, config) ->
+      (err, cfg) ->
         unless err
+          _.extend config, cfg
           unless config.subscription.id
             subscription = self.paymentGateway(config.options.paymentGateway).subscribe config.subscription, config.options.paymentGatewayConfig
             self.emit 'subscription.created', userId, config, subscription
@@ -180,11 +181,12 @@ class MembershipsServer extends share.MembershipsCommon
   #   - paymentGateway String
   #   - selector Object
   ###
-  update: (userId, subscriptionId, subscription = {}, options = {}) ->
-    self = @
+  update: (userId, subscriptionId, subscription = {}, options = {}, self = @) ->
+    config = {}
     @emit 'system.subscription.update', userId, subscriptionId, subscription, options,
-      (err, config) ->
+      (err, cfg) ->
         unless err
+          _.extend config, cfg
           subscription = self.paymentGateway(config.options.paymentGateway).update config.subscription.id, config.subscription, config.options.paymentGatewayConfig
           self.emit 'subscription.updated', userId, config, subscription
         else
@@ -200,11 +202,12 @@ class MembershipsServer extends share.MembershipsCommon
   #   - paymentGateway String
   #   - selector Object
   ###
-  cancel: (userId, subscriptionId, options = {}) ->
-    self = @
+  cancel: (userId, subscriptionId, options = {}, self = @) ->
+    config = {}
     @emit 'system.subscription.cancel', userId, subscriptionId, options,
-      (err, config) ->
+      (err, cfg) ->
         unless err
+          _.extend config, cfg
           subscription = self.paymentGateway(config.options.paymentGateway).cancel config.subscription.id, config.options.paymentGatewayConfig
           self.emit 'subscription.canceled', userId, config, subscription
         else
