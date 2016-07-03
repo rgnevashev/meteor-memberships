@@ -212,8 +212,7 @@ class MembershipsServer extends share.MembershipsCommon
           self.emit 'subscription.canceled', userId, config, subscription
         else
           throw new Meteor.Error 'memberships-error', err
-    _.extend config,
-      subscription: subscription
+    config
 
 
   subscription: (userId, options = {}) ->
