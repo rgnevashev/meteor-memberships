@@ -10,10 +10,13 @@ class MembershipsClient extends share.MembershipsCommon
   update: (subscriptionId, subscription = {}, options = {}, done) ->
     Meteor.call 'Memberships/update', subscriptionId, subscription, options, done
 
-  cancel: (group = 'default', options = {}, done) ->
-    subscription = @subscription {group}
+  cancel: (options = {}, done) ->
+    _.defaults options,
+      group: 'default'
+      paymentGateway: 'stripe'
+    subscription = @subscription options
     if subscription
-      Meteor.call 'Memberships/cancel', subscription.id, _.extend(options, {group}), done
+      Meteor.call 'Memberships/cancel', subscription.id, options, done
     else
       throw new Meteor.Error 'no-membership', 'No membership'
 
@@ -51,4 +54,4 @@ class MembershipsClient extends share.MembershipsCommon
         paymentGateway: String
     user = Meteor.users.findOne Meteor.userId()
     throw new Meteor.Error 'User not found' unless user
-    _.findWhere user.subscriptions or [], _.pick(options, 'paymentGateway', 'group', 'id', 'plan')
+    _.findWhere user.subscriptions or [], options

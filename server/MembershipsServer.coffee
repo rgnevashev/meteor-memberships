@@ -32,7 +32,7 @@ class MembershipsServer extends share.MembershipsCommon
       config =
         group: @groupByPlan(subscription.plan)
         subscription: subscription
-        options: _.defaults options,
+        options: _.extend options,
           paymentGatewayConfig: @paymentGatewayConfig(userId, options.paymentGateway)
       listenerCount = @listeners('subscription.create').length
       if listenerCount == 1
@@ -54,7 +54,7 @@ class MembershipsServer extends share.MembershipsCommon
         group: if options.group then options.group else @groupByPlan(subscription.plan)
         subscription: _.extend subscription,
           id: subscriptionId
-        options: _.defaults options,
+        options: _.extend options,
           paymentGatewayConfig: @paymentGatewayConfig(userId, options.paymentGateway)
       listenerCount = @listeners('subscription.update').length
       if listenerCount == 1
@@ -76,7 +76,7 @@ class MembershipsServer extends share.MembershipsCommon
         group: options.group
         subscription:
           id: subscriptionId
-        options: _.defaults options,
+        options: _.extend options,
           paymentGatewayConfig: @paymentGatewayConfig(userId, options.paymentGateway)
       listenerCount = @listeners('subscription.cancel').length
       if listenerCount == 1
@@ -165,7 +165,7 @@ class MembershipsServer extends share.MembershipsCommon
             subscription = self.paymentGateway(config.options.paymentGateway).subscribe config.subscription, config.options.paymentGatewayConfig
             self.emit 'subscription.created', userId, config, subscription
           else
-            subscription = self.update(userId, config.subscription.id, subscription, options)
+            config = self.update(userId, config.subscription.id, subscription, options)
         else
           throw new Meteor.Error 'memberships-error', err
     _.extend config,
@@ -191,8 +191,7 @@ class MembershipsServer extends share.MembershipsCommon
           self.emit 'subscription.updated', userId, config, subscription
         else
           throw new Meteor.Error 'memberships-error', err
-    _.extend config,
-      subscription: subscription
+    config
 
   ###
   # userId
