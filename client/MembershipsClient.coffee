@@ -53,5 +53,5 @@ class MembershipsClient extends share.MembershipsCommon
       Match.ObjectIncluding
         paymentGateway: String
     user = Meteor.users.findOne Meteor.userId()
-    throw new Meteor.Error 'User not found' unless user
+    return false unless user
     _.findWhere user.subscriptions or [], options
