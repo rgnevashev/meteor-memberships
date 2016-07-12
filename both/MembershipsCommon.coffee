@@ -73,10 +73,9 @@ class share.MembershipsCommon extends EventEmitter
   role: (role, group = 'default') ->
     @Roles.findOne(role: role, group: group)
 
-  permissions: (role, group = 'default') ->
+  permissions: (role = 'free', group = 'default') ->
     role = @Roles.findOne(role: role, group: group)
     permissions = role?.permissions or {}
     _.each role.inherit or [], (name) =>
-      _.extend permissions,
-        @Roles.findOne(role: name, group: group)?.permissions or {}
+      _.extend @Roles.findOne(role: name, group: group)?.permissions or {}, permissions
     permissions
