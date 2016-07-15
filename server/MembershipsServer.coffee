@@ -26,11 +26,16 @@ class MembershipsServer extends share.MembershipsCommon
     @on 'system.subscription.create', (userId, subscription, options, done) ->
       self = @
       _.defaults options,
+        group: 'default'
         paymentGateway: 'stripe'
       unless _.contains(_.keys(@_payment_gateways), options.paymentGateway)
         done 'Payment Gateway not found'
+      unless user = Meteor.users.findOne(userId)
+        done 'User not found'
+      options.group = @groupByPlan(subscription.plan) if subscription.plan
+      if prevSub = _.findWhere(user.subscriptions or [], options)
+        subscription.id = prevSub.id
       config =
-        group: @groupByPlan(subscription.plan)
         subscription: subscription
         options: _.extend options,
           paymentGatewayConfig: @paymentGatewayConfig(userId, options.paymentGateway)
@@ -44,16 +49,29 @@ class MembershipsServer extends share.MembershipsCommon
       else
         done 'Event "subscription.create" require'
 
-    @on 'system.subscription.update', (userId, subscriptionId, subscription, options, done) ->
+    @on 'system.subscription.created', (userId, config, subscription) ->
+      Meteor.users.update userId,
+        $push:
+          subscriptions:
+            _.extend _.clone(config.options),
+              id: subscription.id
+              plan: config.subscription.plan
+              role: @roleByPlan(config.subscription.plan)
+      , validate: false
+
+    @on 'system.subscription.update', (userId, subscription, options, done) ->
       self = @
       _.defaults options,
         paymentGateway: 'stripe'
       unless _.contains(_.keys(@_payment_gateways), options.paymentGateway)
         done 'Payment Gateway not found'
+      unless user = Meteor.users.findOne(userId)
+        done 'User not found'
+      if not subscription.plan and prevSub = _.findWhere(user.subscriptions or [], id: subscription.id)
+        subscription.plan = prevSub.plan
+      options.group = @groupByPlan(subscription.plan) if subscription.plan
       config =
-        group: if options.group then options.group else @groupByPlan(subscription.plan)
-        subscription: _.extend subscription,
-          id: subscriptionId
+        subscription: subscription
         options: _.extend options,
           paymentGatewayConfig: @paymentGatewayConfig(userId, options.paymentGateway)
       listenerCount = @listeners('subscription.update').length
@@ -66,6 +84,14 @@ class MembershipsServer extends share.MembershipsCommon
       else
         done 'Event "subscription.update" require'
 
+    @on 'system.subscription.updated', (userId, config, subscription) ->
+      modifier = $set: {}
+      _.each config.options, (value, key) ->
+        modifier.$set["subscriptions.$.#{key}"] = value
+      modifier.$set['subscriptions.$.plan'] = config.subscription.plan
+      modifier.$set['subscriptions.$.role'] = @roleByPlan(config.subscription.plan)
+      Meteor.users.update _id: userId, 'subscriptions.id': subscription.id, modifier, validate: false
+
     @on 'system.subscription.cancel', (userId, subscriptionId, options, done) ->
       self = @
       _.defaults options,
@@ -73,10 +99,10 @@ class MembershipsServer extends share.MembershipsCommon
       unless _.contains(_.keys(@_payment_gateways), options.paymentGateway)
         done 'Payment Gateway not found'
       config =
-        group: options.group
         subscription:
           id: subscriptionId
         options: _.extend options,
+          group: options.group
           paymentGatewayConfig: @paymentGatewayConfig(userId, options.paymentGateway)
       listenerCount = @listeners('subscription.cancel').length
       if listenerCount == 1
@@ -87,6 +113,12 @@ class MembershipsServer extends share.MembershipsCommon
         done 'Event "subscription.cancel" only one'
       else
         done 'Event "subscription.cancel" require'
+
+    @on 'system.subscription.canceled', (userId, config, subscription) ->
+      Meteor.users.update userId,
+        $pull:
+          subscriptions:
+            id: config.subscription.id
 
 
   define: (role, definition = {}, group = 'default') ->
@@ -156,42 +188,50 @@ class MembershipsServer extends share.MembershipsCommon
   #   - selector Object
   ###
   subscribe: (userId, subscription = {}, options = {}, self = @) ->
-    config = {}
-    @emit 'system.subscription.create', userId, subscription, options,
-      (err, cfg) ->
-        unless err
-          _.extend config, cfg
-          unless config.subscription.id
-            subscription = self.paymentGateway(config.options.paymentGateway).subscribe config.subscription, config.options.paymentGatewayConfig
-            self.emit 'subscription.created', userId, config, subscription
-          else
-            config = self.update(userId, config.subscription.id, subscription, options)
-        else
-          throw new Meteor.Error 'memberships-error', err
-    _.extend config,
-      subscription: subscription
+    try
+      Meteor.wrapAsync((userId, subscription, options, done) ->
+        self.emit 'system.subscription.create', userId, subscription, options,
+          (err, config) ->
+            unless err
+              unless config.subscription.id
+                subscription = self.paymentGateway(config.options.paymentGateway).subscribe(config.subscription, config.options.paymentGatewayConfig)
+                self.emit 'system.subscription.created', userId, config, subscription
+                self.emit 'subscription.created', userId, config, subscription
+                done null, _.extend(config, subscription: subscription)
+              else
+                done null, self.update(userId, subscription, options)
+            else
+              done err
+      )(userId, subscription, options)
+    catch e
+      throw new Meteor.Error 'memberships:subscribe', e
+
 
   ###
   # userId
-  # subscriptionId
   # subscription:
-  #   - plan, source, etc
+  #   - id, plan, source, etc
   # options:
   #   - group String
   #   - paymentGateway String
   #   - selector Object
   ###
-  update: (userId, subscriptionId, subscription = {}, options = {}, self = @) ->
-    config = {}
-    @emit 'system.subscription.update', userId, subscriptionId, subscription, options,
-      (err, cfg) ->
-        unless err
-          _.extend config, cfg
-          subscription = self.paymentGateway(config.options.paymentGateway).update config.subscription.id, config.subscription, config.options.paymentGatewayConfig
-          self.emit 'subscription.updated', userId, config, subscription
-        else
-          throw new Meteor.Error 'memberships-error', err
-    config
+  update: (userId, subscription = {}, options = {}, self = @) ->
+    try
+      Meteor.wrapAsync((userId, subscription, options, done) ->
+        self.emit 'system.subscription.update', userId, subscription, options,
+          (err, config) ->
+            unless err
+              subscription = self.paymentGateway(config.options.paymentGateway).update(config.subscription.id, config.subscription, config.options.paymentGatewayConfig)
+              self.emit 'system.subscription.updated', userId, config, subscription
+              self.emit 'subscription.updated', userId, config, subscription
+              done null, _.extend(config, subscription: subscription)
+            else
+              done err
+      )(userId, subscription, options)
+    catch e
+      throw new Meteor.Error 'memberships:update', e
+
 
   ###
   # userId
@@ -202,17 +242,20 @@ class MembershipsServer extends share.MembershipsCommon
   #   - selector Object
   ###
   cancel: (userId, subscriptionId, options = {}, self = @) ->
-    config = {}
-    @emit 'system.subscription.cancel', userId, subscriptionId, options,
-      (err, cfg) ->
-        unless err
-          _.extend config, cfg
-          subscription = self.paymentGateway(config.options.paymentGateway).cancel config.subscription.id, config.options.paymentGatewayConfig
-          self.emit 'subscription.canceled', userId, config, subscription
-        else
-          throw new Meteor.Error 'memberships-error', err
-    config
-
+    try
+      Meteor.wrapAsync((userId, subscriptionId, options, done) ->
+        self.emit 'system.subscription.cancel', userId, subscriptionId, options,
+          (err, config) ->
+            unless err
+              subscription = self.paymentGateway(config.options.paymentGateway).cancel(config.subscription.id, config.options.paymentGatewayConfig)
+              self.emit 'system.subscription.canceled', userId, config, subscription
+              self.emit 'subscription.canceled', userId, config, subscription
+              done null, _.extend(config, subscription: subscription)
+            else
+              done err
+      )(userId, subscriptionId, options)
+    catch e
+      throw new Meteor.Error 'memberships:cancel', e
 
   subscription: (userId, options = {}) ->
     _.defaults options,
