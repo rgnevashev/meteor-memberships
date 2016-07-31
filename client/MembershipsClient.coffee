@@ -28,7 +28,8 @@ class MembershipsClient extends share.MembershipsCommon
   has: (role, options = {}) ->
     check role, String
     group = @groupByRole(role)
-    throw new Meteor.Error 'Role not found' unless group
+    #throw new Meteor.Error 'Role not found' unless group
+    return false unless group
     subscription = @subscription group: group
     unless subscription
       if role == @defaultRole(group) then true else false
@@ -38,7 +39,8 @@ class MembershipsClient extends share.MembershipsCommon
   hasAccess: (role, options = {}) ->
     check role, String
     group = @groupByRole(role)
-    throw new Meteor.Error 'Role not found' unless group
+    #throw new Meteor.Error 'Role not found' unless group
+    return false unless group
     subscription = @subscription group: group
     unless subscription
       if role == @defaultRole(group) then true else false
